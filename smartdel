@@ -1,0 +1,71 @@
+#!/bin/bash
+
+ACTION_DELETE=0
+ACTION_RESTORE=1
+
+RECYCLE_DIR="$HOME/.recycle/"
+
+printHelp()
+{
+  echo "Usage: smartdel [option] [filename]"
+  echo "  option –d: delete the file (not directory) specified by [filename] (default)"
+  echo "  option –r: restore the file specified by [filename] to the current directory"
+}
+
+delete()
+{
+  if [ -e $1 ]; then
+    $(mv $1 $RECYCLE_DIR)
+  else
+    echo "ERROR: Could not delete $1"
+    echo "‘$1’: No such file"
+  fi
+}
+
+restore()
+{
+  if [ -e $RECYCLE_DIR$1 ]; then
+    $(mv $RECYCLE_DIR$1 $1)
+  else
+    echo "ERROR: Could not restore $1"
+    echo "‘$1’: No such file"
+  fi
+}
+
+parseArgs()
+{
+  case "$1" in
+    -d)
+      action=$ACTION_DELETE
+      ;;
+    -r)
+      action=$ACTION_RESTORE
+      ;;
+    *)
+      printHelp
+      exit 1
+  esac
+}
+
+if [ "$#" -eq 1 ]; then
+  action=$ACTION_DELETE
+  filename=$1
+elif [ "$#" -eq 2 ]; then
+  parseArgs $1
+  filename=$2
+else
+  printHelp
+  exit 1
+fi
+
+case $action in
+  $ACTION_DELETE)
+    delete $filename
+    ;;
+  $ACTION_RESTORE)
+    restore $filename
+    ;;
+  *)
+    echo "ERROR: Invalid action"
+esac
+
