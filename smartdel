@@ -5,13 +5,21 @@ ACTION_RESTORE=1
 
 RECYCLE_DIR="$HOME/.recycle/"
 
+STRING_HELP="Usage: smartdel [option] [filename]
+  option –d: delete the file (not directory) specified by [filename] (default)
+  option –r: restore the file specified by [filename] to the current directory"
+
+#==============================================================================
+# printHelp()
+#==============================================================================
 printHelp()
 {
-  echo "Usage: smartdel [option] [filename]"
-  echo "  option –d: delete the file (not directory) specified by [filename] (default)"
-  echo "  option –r: restore the file specified by [filename] to the current directory"
+  echo "$STRING_HELP"
 }
 
+#==============================================================================
+# delete()
+#==============================================================================
 delete()
 {
   if [ -e $1 ]; then
@@ -22,6 +30,9 @@ delete()
   fi
 }
 
+#==============================================================================
+# restore()
+#==============================================================================
 restore()
 {
   if [ -e $RECYCLE_DIR$1 ]; then
@@ -32,6 +43,9 @@ restore()
   fi
 }
 
+#==============================================================================
+# parseArgs()
+#==============================================================================
 parseArgs()
 {
   case "$1" in
@@ -47,6 +61,9 @@ parseArgs()
   esac
 }
 
+#==============================================================================
+# main
+#==============================================================================
 if [ "$#" -eq 1 ]; then
   action=$ACTION_DELETE
   filename=$1
