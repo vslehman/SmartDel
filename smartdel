@@ -1,5 +1,19 @@
 #!/bin/bash
 
+#//////////////////////////////////////////////////////////////////////////////
+#                                 SmartDel
+#------------------------------------------------------------------------------
+#                               Vince Lehman
+#                                COMP 4262
+#                              Course Project
+#                                 12/2/14
+#//////////////////////////////////////////////////////////////////////////////
+
+TRUE="true"
+FALSE="false"
+
+IS_DEBUG_ON=$FALSE
+
 ACTION_DELETE=0
 ACTION_RESTORE=1
 
@@ -9,8 +23,36 @@ STRING_HELP="Usage: smartdel [option] [filename]
   option –d: delete the file (not directory) specified by [filename] (default)
   option –r: restore the file specified by [filename] to the current directory"
 
+isArgProvided=true
+
+ERROR_NO_ARGS="1"
+
+#==============================================================================
+# log()
+#------------------------------------------------------------------------------
+# Parameters:
+#   $1: The message to log
+#
+# return:
+#   N/A
+#==============================================================================
+log()
+{
+  msg=$1
+
+  if [ "$IS_DEBUG_ON" = "$TRUE" ]; then
+    echo "DEBUG: $msg"
+  fi
+}
+
 #==============================================================================
 # printHelp()
+#------------------------------------------------------------------------------
+# Parameters:
+#   N/A
+#
+# return:
+#   N/A
 #==============================================================================
 printHelp()
 {
@@ -19,70 +61,123 @@ printHelp()
 
 #==============================================================================
 # delete()
+#------------------------------------------------------------------------------
+# Parameters:
+#   $1: File to delete
+#
+# return:
+#   N/A
 #==============================================================================
 delete()
 {
-  if [ -e $1 ]; then
-    $(mv $1 $RECYCLE_DIR)
+  file=$1
+
+  if [ -e "$file" ]; then
+    log "Deleting $file"
+    $(mv $file $RECYCLE_DIR)
   else
-    echo "ERROR: Could not delete $1"
-    echo "‘$1’: No such file"
+    echo "ERROR: Could not delete \"$file\""
+    echo "No such file: \"$file\""
   fi
 }
 
 #==============================================================================
 # restore()
+#------------------------------------------------------------------------------
+# Parameters:
+#   $1: Pattern to match against in the recycling directory
+#
+# return:
+#   N/A
 #==============================================================================
 restore()
 {
-  if [ -e $RECYCLE_DIR$1 ]; then
-    $(mv $RECYCLE_DIR$1 $1)
-  else
-    echo "ERROR: Could not restore $1"
-    echo "‘$1’: No such file"
-  fi
+  pattern="$1"
+  files="$RECYCLE_DIR$pattern"
+
+  for file in $files; do
+    if [ -e "$file" ]; then
+      log "Restoring $file"
+      $(mv $file .)
+    else
+      echo "ERROR: Could not restore $file"
+      echo "‘$file’: No such file"
+    fi
+  done
 }
 
 #==============================================================================
 # parseArgs()
+#------------------------------------------------------------------------------
+# Parameters:
+#   $1: The array of args passed to the program
+#
+# return:
+#   N/A
 #==============================================================================
 parseArgs()
 {
-  case "$1" in
+  arg=$1
+
+  case "$arg" in
     -d)
+      log "Delete"
       action=$ACTION_DELETE
       ;;
     -r)
+      log "Restore"
       action=$ACTION_RESTORE
       ;;
     *)
-      printHelp
-      exit 1
+      log "Default"
+      action=$ACTION_DELETE
+      isArgProvided=false
+      # Assume all arguments are files
+      ;;
   esac
 }
 
 #==============================================================================
 # main
+#------------------------------------------------------------------------------
+# Parameters:
+#   $@: Command-line arguments
+#
+# return:
+#   N/A
 #==============================================================================
-if [ "$#" -eq 1 ]; then
-  action=$ACTION_DELETE
-  filename=$1
-elif [ "$#" -eq 2 ]; then
-  parseArgs $1
-  filename=$2
-else
+
+argc=$#
+
+# If no arguments provided, print help
+if [ "$argc" -eq "0" ]; then
+  log "No args"
   printHelp
-  exit 1
+  exit "$ERROR_NO_ARGS"
 fi
 
-case $action in
-  $ACTION_DELETE)
-    delete $filename
-    ;;
-  $ACTION_RESTORE)
-    restore $filename
-    ;;
-  *)
-    echo "ERROR: Invalid action"
-esac
+# Check for action option
+parseArgs $@
+
+if [ "$isArgProvided" = "$TRUE" ]; then
+  log "Arg provided"
+  # Remove first argument
+  shift 1
+fi
+
+# Perform action on each argument
+for file in "$@";
+do
+  log "Processing file - $file"
+  case $action in
+    "$ACTION_DELETE")
+      delete "$file"
+      ;;
+    "$ACTION_RESTORE")
+      restore "$file"
+      ;;
+    *)
+      echo "ERROR: Invalid action"
+  esac
+done
 
