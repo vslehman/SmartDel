@@ -26,6 +26,7 @@ STRING_HELP="Usage: smartdel [option] [filename]
 isArgProvided=true
 
 ERROR_NO_ARGS="1"
+ERROR_NO_FILES="2"
 
 #==============================================================================
 # log()
@@ -165,6 +166,13 @@ if [ "$isArgProvided" = "$TRUE" ]; then
   shift 1
 fi
 
+# If there are no files to process, exit
+if [ "$#" -eq "0" ]; then
+  log "No files"
+  printHelp
+  exit "$ERROR_NO_FILES"
+fi
+
 # Perform action on each argument
 for file in "$@";
 do
@@ -180,4 +188,3 @@ do
       echo "ERROR: Invalid action"
   esac
 done
-
